@@ -1,16 +1,17 @@
 # Lambdas And Functional Interfaces
 
         - Lambda Expressions
-        - Functional Interfaces
         - Method References
+        - Functional Interfaces
+        
 
-- Functional programming is the way of writing code more declarative than imperative. It specifies what to do not how to do it.
+- Functional programming is the way of writing code more declarative than imperative. It specifies what to do, not how to do it.
 - Examples for declarative languages: SQL, all functional programming languages
-- Functional Programming uses Lambda to write the code.
+
 ## Lambda Expressions
 - A Lambda Expression is a block of code that passed around
 - In java we can think of lambda as an unnamed method inside the anonymous class.
-- Lambdas works based on the concept called **_Deferred Execution_** means code is specified now will run later
+- Lambdas works based on the concept called **_Deferred Execution_** means code is specified now and it will run later
 
 __Examples:__
 
@@ -99,7 +100,7 @@ __2. Lambda Body:__
     - More than one statements curly braces are mandatory.
     - Without return: follow only curly braces rule
     - With return: 
-            - with single statement + curly braces:  then mandatory to use return keyword+end with semicolon
+            - with single statement + curly braces:  then mandatory to use return keyword+end with semicolon(;)
             - with single statement + no curly braces:  then should not use return keyword
             - with multiple statements: 
                 - Mandatory to use curly braces
@@ -141,18 +142,182 @@ __3. Variables Scope In Lambdas:__
 |                                     |               |                                                                                                                                         |
 
 
+___
 
+## Method References:
+
+---
+- Method references are another way to make the code easier to read, such as simply mentioning the name of the method.
+- Variations of Method References:
+
+
+    - Static Methods
+    - Instance Methods on Particular Objects
+    - Instance Methods on a First Input Parameter
+    - Constructor
+
+__When to use Method References?__
+- Whenever the lambda expression does nothing other than pass that parameter to another method.
+- For Example:
+
+````java
+import java.util.List;
+
+var names = List.of("Sam", "Ram", "John");
+
+names.forEach(name->System.out.println(name)); //Here lambda is doing nothing except passing it's param to sout
+        
+names.forEach(System.out::println); //With Method Reference input param is directly passed to Method Reference
+
+````
+
+- The `::` operator tells Java to call the println() method later with the Input param.
+- Remember that `::` is like a lambda, and it is used for deferred execution with a functional interface.
+
+#### 1. Static Method References:
+- If we want to directly reference a static method in any class from lambda then we can use static method reference
+- For Example:
+
+````java
+interface Converter {
+    long round(double num);
+}
+````
+
+- Above `Converter` functional interface has round method which converts double to long. 
+- In `java.lang.Math` class we have static method which does the same job, so we can reference that method directly.
+
+````java
+Converter methodRef = Math::round; //Static Method Reference
+Converter lambda = x -> Math.round(x); //Lambda Expression
+
+System.out.println(methodRef.round(100.1)); // 100
+````
+
+#### 2.Instance Methods on Particular Objects
+- We have an object which is already defined, and we want to reference a method from that object
+- For Example, functional interface checks if a String starts with a specified value:
+````java
+
+interface StringStart {
+  boolean beginningCheck(String prefix);
+}
+
+var str = "Welcome to Lambdas and Functional Interfaces";
+StringStart methodRef = str::startsWith;
+StringStart lambda = s -> str.startsWith(s);
+
+System.out.println(methodRef.beginningCheck("A")); // false
+System.out.println(methodRef.beginningCheck("Welcome")); // true // Here we are passing input param directly to startsWith method
+
+````
+- A method reference doesn’t have to take any parameters.
+- While all method references can be turned into lambdas, the opposite is not always true.
+- For example, consider this code:
+````java
+  var str = "";
+  StringChecker lambda = () -> str.startsWith("Zoo");
+
+````
+- How might we write this as a method reference? 
+- You might try one of the following:
+- 
+````java
+  StringChecker methodReference = str::startsWith; // DOES NOT COMPILE
+  StringChecker methodReference = str::startsWith("Zoo"); // DOES NOT COMPILE
+
+````
+- Neither of these works! While we can pass the str as part of the method reference, there’s no way to pass the "Zoo" parameter with it.
+- Therefore, it is not possible to write this lambda as a method reference.
+
+#### 3. Instance Methods on a First Input Parameter
+
+- In this variation, an object will be unknown during the compile time, it will be derived during runtime.
+- For Example,
+
+````java
+interface StringParameterChecker {
+    boolean check(String text);
+}
+
+StringParameterChecker methodRef = String::isEmpty;
+StringParameterChecker lambda = s -> s.isEmpty();
+System.out.println(methodRef.check("Zoo"));
+
+````
+
+- It looks like a static method, but it isn’t. 
+- Instead, Java knows that isEmpty() is an instance method that does not take any parameters.
+- Java uses the parameter supplied at runtime as the instance on which the method is called.
+- You can even combine the two types of instance method references.
+- For Example,
+````java
+interface StringTwoParameterChecker {
+    boolean check(String text, String prefix);
+}
+//Pay attention to the parameter order when reading the implementation:
+StringTwoParameterChecker methodRef = String::startsWith;
+StringTwoParameterChecker lambda = (s, p) -> s.startsWith(p);
+
+System.out.println(methodRef.check("Zoo", "A")); // false
+````
+- Since the functional interface takes two parameters, Java has to figure out what they represent. 
+- The first one will always be the instance of the object for instance methods. Any others are to be method parameters.
+
+#### 4.Constructor References
+
+- A constructor reference is a special type of method reference that uses `new` instead of a method and instantiates an object.
+- For Example,
+
+````java
+import java.util.function.Supplier;
+
+Supplier<String> mref = String::new;
+Supplier<String> lambda = ()-> new String();
+
+interface StringCopier {
+  String copy(String value);
+}
+
+StringCopier methodRef = String::new;
+StringCopier lambda = x -> new String(x);
+
+var myString = methodRef.copy("Zebra");
+System.out.println(myString.equals("Zebra")); // true
+
+````
+
+#### Method References Summary:
+
+![method_references_summary.png](method_references_summary.png)
+
+---
 ## Functional Interfaces:
+
+---
+
+    - Annotaion: @FunctionalInterface
+    - SAM: Single Abstract Method
+    - Redeclaring java.lang.Object's methods
+    - Commonly Used Built-in Functional Interfaces
+    - Functional Interface's Convenience Methods
+    - Functional Interfaces for Primitive Types
+
+
+
+
+#### SAM & Annotation: @FunctionalInterface
 - Any interface that follows (Single Abstract Method) SAM rule we call it as a **_Functional Interface_**
 - When we are creating the functional interface, we can use optional annotation `@FunctionalInterface`
 - Why not mandatory because of backward compatibility, we want to use Runnable, Comparator, ..etc interface as Functional Interfaces.
 - Advantage of  `@FunctionalInterface` annotation: if you mark your interface as  `@FunctionalInterface` then you cannot add more than one Abstract Method, if you add you will get compilation error.
 - Always remember that SAM rule is making an interface as a Functional Interface not the annotation. Annotation is optional
 
-#### Adding java.lang.Object methods without violating SAM Rule:
-- Functional Interfaces can declare object methods as an abstract methods without violating SAM rule.
+#### Re-declaring java.lang.Object's methods without violating SAM Rule:
+- Functional Interfaces can declare object methods as abstract methods without violating SAM rule.
 - Why?: Any class that implements the interface by default it will have the implementations of java.lang.Object methods it means
-- Either it can override or default implementations are available in the super class java.lang.Object
+- Either it can override or default implementations are available in the superclass java.lang.Object
+
 ````java
 @FunctionalInterface
 interface FlyChecker {
@@ -173,4 +338,23 @@ interface FlyChecker {
 //It is considered toString() is not a abstract method and as No SAM in this functional interface it does not compile
 //Unexpected @FunctionalInterface annotation  FlyChecker is not a functional interface no abstract method found in interface FlyChecker
 ````
+
+
+
+
+
+#### Exam Notes:
+
+__Functional Interfaces:__
+
+- Annotation: ``@FunctionalInterface`` is Optional, if we use it then compiler will check for SAM rule.
+
+- `java.lang.Object` methods
+
+````java
+public String toString();
+public boolean equals(Object);
+public int hashCode();
+````
+
 
