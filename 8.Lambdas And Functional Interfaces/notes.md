@@ -108,7 +108,145 @@ __2. Lambda Body:__
 
 __3. Variables Scope In Lambdas:__
 
+- Variables can appear in three places with respect to lambdas: 
 
+      - Parameter list
+      - Local variables declared inside the lambda body
+      - Outside Variables referenced from the lambda body.
+#### 3.1 Parameters List:
+- specifying the type of parameters is optional
+- `var` can be used in place of the specific type
+- That means that all three of the below statements are interchangeable:
+
+````java
+Predicate<String> p = x -> true; //No type
+
+Predicate<String> p = (var x) -> true; //var type
+
+Predicate<String> p = (String x) -> true; //String type
+
+````
+- A lambda infers the types from the surrounding context. In the above all the variations the type of parameter is `String`. 
+- Since lambda parameters are just like method parameters, you can add modifiers to them. Specifically, you can add the `final` modifier or an `annotation`, as shown in this example:
+
+````java
+public void counts(List<Integer> list) {
+    list.sort((final var x, @Deprecated var y) -> x.compareTo(y));
+}
+//above the type of x, y is Integer, list is an integer list
+````
+
+#### Parameter Types Summary:
+
+![parameter_types.png](parameter_types.png)
+ 
+#### 3.2 Local variables declared inside the lambda body
+- Lambda body can be a single expression, or it can have a block of code.
+- Same rules as any normal java block. We can create new local variables
+
+````java
+(a, b) -> { int c = 0; return 5; } //valid 'c' is new variable
+        
+(a, b) -> { int a = 0; return 5; } // DOES NOT COMPILE, here 'a' is already declared on lambda params so we cannot redeclare 
+
+````
+- __Note: Java doesn’t let you create a local variable with the same name as one already declared in that scope.__
+
+__How many syntax errors do you see in this method?__
+
+````java
+public void variables(int a) {
+    int b = 1;
+Predicate<Integer> p1 = a -> { //Error-1: cannot redeclare variable 'a'
+        int b = 0; //Error-2: cannot redeclare variable 'a'
+        int c = 0;
+        return b == c; 
+    } //Error-3: If we are assigning lambda to a variable then we have to end with semicolon(;)
+}
+
+````
+- lambdas and method references are used in chained method calls. The shorter the lambda, the easier it is to read the code.
+
+#### 3.3 Outside Variables referenced from the lambda body:
+
+- Lambda bodies are allowed to reference some variables from the surrounding code. The following code is legal:
+
+````java
+public class Crow {
+    
+    private String color;
+    
+    public void caw(String name) {
+        String volume = "loudly";
+        Consumer<String> consumer = s -> System.out.println(name + " says " + volume + " that she is " + color); // All are valid usages 
+    }
+}
+````
+- This shows that a lambda can access an instance variable, method parameter, or local variable under certain conditions. 
+- Instance variables (and class variables) are always allowed.
+- The only thing lambdas cannot access are variables that are not final or effectively final.
+
+````java
+public class Crow {
+    private String color;
+    public void caw(String name) {
+      String volume = "loudly";
+      
+      name = "Caty";
+      
+      color = "black";
+  
+      Consumer<String> consumer = s ->
+              System.out.println(name + " says " // DOES NOT COMPILE; Name is reassinged so not effectively final
+                                    + volume + " that she is " + color); // DOES NOT COMPILE; volume is reassinged after the lambda, so not effectively final
+        
+        volume = "softly";
+    }
+}
+//Error Message: local variables referenced from a lambda expression must be final or effectively final
+````
+- If lambda tries to use not effective final variable, then we get a compilation errors
+- It’s not a problem to assign a value to a non-final variable. However, once the lambda tries to use it, we do have a problem.
+
+- Valid Lambda Scopes
+
+````java
+public class Lambdas {
+    public static void main(String[] args) {
+        Crow crow = new Crow();
+        crow.caw("Smiley");
+    }
+
+
+}
+
+class Crow {
+    private String color;
+    static String greet = "Hello";
+    public void caw(String name) {
+        String volume = "loudly";
+        color = "black";
+        greet="Hey Buddy,";
+        Consumer<String> consumer = s ->
+                System.out.println(" ==> "+name + " <== says ==>" // DOES NOT COMPILE; Name is reassinged so not effectively final
+                        + volume + " <== that she is ==>" + color+" <== With Greet: ==>"+greet+" <=="); // DOES NOT COMPILE; volume is reassinged after the lambda, so not effectively final
+ 
+      consumer.accept(""); // ==> Smiley <== says ==>loudly <== that she is ==>black <== With Greet: ==>Hey Buddy, <==
+   
+      color = "White";
+      greet = "Hey...!";
+      consumer.accept(""); //==> Smiley <== says ==>loudly <== that she is ==>White <== With Greet: ==>Hey...! <==
+    }
+}
+
+````
+
+#### Variable Scopes in Lambdas Summary:
+
+![variable_scopes_in_lambdas.png](variable_scopes_in_lambdas.png)
+
+
+#### Lambdas Cheat Sheet:
 
 | Lambda                              | Valid/Invalid | Reason                                                                                                                                  |
 |-------------------------------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------|
