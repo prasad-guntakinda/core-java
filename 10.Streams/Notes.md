@@ -348,7 +348,357 @@ Stream<String> stream = Stream.of("w", "o", "l", "f");
 TreeSet<String> set = stream.collect(Collectors.toCollection(TreeSet::new));
 System.out.println(set); // [f, l, o, w]
 ````
-#### Common Intermediate Operations:
+### Common Intermediate Operations:
+- an intermediate operation produces a stream as its result. 
+- An intermediate operation can also deal with an infinite stream simply by returning another infinite stream. 
+- Since elements are produced only as needed, this works fine.
+
+#### Filtering: filter()
+- The filter() method returns a Stream with elements that match a given expression.
+
+````java
+public Stream<T> filter(Predicate<? super T> predicate);
+````
+- Practice
+````java
+Stream<String> s = Stream.of("monkey", "gorilla", "bonobo");
+s.filter(x -> x.startsWith("m")).forEach(System.out::print); // monkey
+````
+
+#### Removing Duplicates: distinct()
+- The distinct() method returns a stream with duplicate values removed.
+- Java calls equals() to determine whether the objects are equivalent.
+
+````java
+public Stream<T> distinct();
+````
+- Practice:
+````java
+Stream<String> s = Stream.of("duck", "duck", "duck", "goose");
+s.distinct().forEach(System.out::print); // duckgoose
+````
+#### Restricting by Position: limit() , skip()
+- The limit() and skip() methods can make a Stream smaller, or limit() could make a finite stream out of an infinite stream.
+
+````java
+public Stream<T> limit(long maxSize);
+public Stream<T> skip(long n);
+````
+- Practice:
+````java
+Stream<Integer> s = Stream.iterate(1, n -> n + 1);
+s.skip(5).limit(2).forEach(System.out::print); // 67
+````
+
+#### Mapping: map(), flatMap()
+- map()
+- The map() method creates a one-to-one mapping from the elements in the stream to the elements of the next step in the stream.
+````java
+public <R> Stream<R> map(Function<? super T, ? extends R> mapper);
+````
+- Practice:
+````java
+Stream<String> s = Stream.of("monkey", "gorilla", "bonobo");
+s.map(String::length).forEach(System.out::print); // 676
+````
+- **flatMap():**
+- The flatMap() method takes each element in the stream and makes any elements it contains top-level elements in a single stream.
+- This is helpful when you want to remove empty elements from a stream or combine a stream of lists
+
+````java
+public <R> Stream<R> flatMap(Function<? super T, ? extends Stream<? extends R>> mapper);
+````
+
+- Practice:
+````java
+List<String> zero = List.of();
+var one = List.of("Bonobo");
+var two = List.of("Mama Gorilla", "Baby Gorilla");
+Stream<List<String>> animals = Stream.of(zero, one, two);
+animals.flatMap(m -> m.stream()).forEach(System.out::println);
+/*Here’s the output:
+Bonobo
+Mama Gorilla
+Baby Gorilla*/
+````
+- As you can see, it removed the empty list completely and changed all elements of each list to be at the top level of the stream.
+
+#### Concatenating Streams: concat()
+- While flatMap() is good for the general case, there is a more convenient way to concatenate two streams:
+````java
+static <T> Stream<T> concat(Stream<? extends T> a, Stream<? extends T> b);
+````
+
+- Practice:
+- 
+ ````java
+var one = Stream.of("Bonobo");
+var two = Stream.of("Mama Gorilla", "Baby Gorilla");
+Stream.concat(one, two).forEach(System.out::println);
+````
+- This produces the same three lines as the previous example. The two streams are concatenated, and the terminal operation, forEach(), is called.
+
+#### Sorting: sorted()
+- The sorted() method returns a stream with the elements sorted. 
+- Just like sorting arrays, Java uses natural ordering unless we specify a comparator.
+
+````java
+public Stream<T> sorted();
+public Stream<T> sorted(Comparator<? super T> comparator);
+````
+
+- Practice:
+````java
+Stream<String> s = Stream.of("brown-", "bear-");
+s.sorted().forEach(System.out::print); // bear-brown-
+
+Stream<String> s = Stream.of("brown bear-",
+        "grizzly-");
+s.sorted(Comparator.reverseOrder())
+        .forEach(System.out::print); // grizzly-brown bear-
+
+Stream<String> s = Stream.of("brown bear-", "grizzly-");
+s.sorted(Comparator::reverseOrder); // DOES NOT COMPILE
+````
+- Because reverseOrder() takes no arguments and returns a value.
+- the method reference is equivalent to () -> Comparator.reverseOrder(), which is really a Supplier<Comparator>. 
+- This is not compatible with sorted(Comparator) method.
+
+#### Peek():
+
+- It is useful for debugging because it allows us to perform a stream operation without changing the stream.
+````java
+public Stream<T> peek(Consumer<? super T> action);
+````
+- Think of peek() as an intermediate version of forEach() that returns the original stream to you.
+
+- Practice:
+````java
+var stream = Stream.of("black bear", "brown bear", "grizzly");
+long count = stream.filter(s -> s.startsWith("g")).peek(System.out::println).count(); // grizzly
+System.out.println(count); //1
+````
+- Note:
+- Remember that peek() is intended to perform an operation without changing the result.
+````java
+var numbers = new ArrayList<>();
+var letters = new ArrayList<>();
+numbers.add(1);
+letters.add('a');
+
+Stream<List<?>> stream = Stream.of(numbers, letters);
+stream.map(List::size).forEach(System.out::print); // 11
+
+//Now we add a peek() call and note that Java doesn’t prevent us from writing bad peek code:
+
+Stream<List<?>> bad = Stream.of(numbers, letters);
+bad.peek(x -> x.remove(0)).map(List::size).forEach(System.out::print); // 00
+````
+- This example is bad because peek() is modifying the data structure that is used in the stream, which causes the result of the stream pipeline to be different than if the peek wasn’t present.
+
+#### Stream Pipeline:
+- Streams allow you to use chaining and express what you want to accomplish rather than how to do so. 
+- Let’s say that we wanted to get the first two names of our friends alphabetically that are four characters long.
+
+````java
+var list = List.of("Toby", "Anna", "Leroy", "Alex");
+List<String> filtered = new ArrayList<>();
+for (String name: list)
+    if (name.length() == 4) filtered.add(name);
+
+Collections.sort(filtered);
+var iter = filtered.iterator();
+if (iter.hasNext()) System.out.println(iter.next());
+if (iter.hasNext()) System.out.println(iter.next());
+````
+- streams:
+````java
+var list = List.of("Toby", "Anna", "Leroy", "Alex");
+list.stream().filter(n -> n.length() == 4).sorted().limit(2).forEach(System.out::println);
+
+//we can format it.
+
+var list = List.of("Toby", "Anna", "Leroy", "Alex");
+list.stream()
+.filter(n -> n.length() == 4)
+.sorted()
+.limit(2)
+.forEach(System.out::println);
+````
+
+- Practice:
+````java
+long count = Stream.of("goldfish", "finch")
+.filter(s -> s.length()> 5)
+.collect(Collectors.toList())
+.stream()
+.count();
+System.out.println(count); // 1
+````
+- When you see chained pipelines, note where the source and terminal operations are. This will help you keep track of what is going on.
+
+
+## 10.3 Primitive Streams: IntStream, LongStream and DoubleStream:
+- Up until now, all of the streams we’ve created used the Stream interface with a generic type, like Stream<String>, Stream<Integer>, and so on. 
+- For numeric values, we have been using wrapper classes.
+- Java actually includes other stream classes besides Stream that you can use to work with select primitives: int, double, and long
+- An IntStream has many of the same intermediate and terminal methods as a Stream but includes specialized methods for working with numeric data.
+- The primitive streams know how to perform certain common operations automatically like min(), max(), average(), sum() etc.
+
+### Types of Primitive Streams:
+Here are the three types of primitive streams:
+
+    IntStream: Used for the primitive types int, short, byte, and char
+    LongStream: Used for the primitive type long
+    DoubleStream: Used for the primitive types double and float
+- Common Primitive Stream Methods:
+
+![primitive_stream_methods_1.png](primitive_stream_methods_1.png)
+
+![primitive_stream_methods_2.png](primitive_stream_methods_2.png)
+
+#### 10.3.1 Creating Primitive Streams:
+- Some of the methods for creating a primitive stream are equivalent to how we created the source for a regular Stream.
+
+- Syntax:
+
+````java
+//All the regular Stream methods:
+
+import java.util.stream.IntStream;
+
+empty();
+of(int);
+of(int ... ints);
+
+generate();
+iterate();
+
+mapToInt();
+mapToDouble();
+mapToLong();
+
+````
+
+- Practice:
+````java
+import java.util.Random;
+import java.util.stream.DoubleStream;
+import java.util.stream.LongStream;
+
+DoubleStream empty = DoubleStream.empty();
+DoubleStream oneValue = DoubleStream.of(3.14);
+DoubleStream varargs = DoubleStream.of(1.0, 1.1, 1.2);
+var random = DoubleStream.generate(Math::random);
+var fractions = DoubleStream.iterate(.5, d -> d / 2);
+
+//Using java.util.Random class
+var random = new Random(); //there are 3 overloaded methods are there
+IntStream ints = random.ints();
+LongStream longs = random.longs();
+DoubleStream doubles =random.doubles();
+
+````
+
+#### Mapping Streams:
+- Another way to create a primitive stream is by mapping from another stream type.
+
+- Syntax:
+````java
+DoubleStream mapToDouble(ToDoubleFunction<? super T> mapper);
+IntStream mapToInt(ToIntFunction<? super T> mapper);
+LongStream mapToLong(ToLongFunction<? super T> mapper);
+//mapMulti is other methods
+
+DoubleStream flatMapToDouble(Function<? super T,? extends DoubleStream> mapper);
+IntStream flatMapToInt(Function<? super T,? extends IntStream> mapper);
+LongStream flatMapToLong(Function<? super T,? extends LongStream> mapper);
+````
+
+
+![mapping_streams.png](mapping_streams.png)
+
+![flatMappings.png](flatMappings.png)
+
+- Funtion Types for mappings:
+
+![streams_mapping_functions.png](streams_mapping_functions.png)
+
+- Primitive to Object Streams
+- 2 ways: mapToObj() and boxed()
+````java
+
+private static Stream<Integer> mapping(IntStream stream) {
+    return stream.mapToObj(x -> x);
+}
+private static Stream<Integer> boxing(IntStream stream) {
+    return stream.boxed();
+}
+````
+
+- Practice:
+- This function takes an Object, which is a String in this case. The function returns an int.
+````java
+Stream<String> objStream = Stream.of("penguin", "fish");
+IntStream intStream = objStream.mapToInt(s -> s.length());
+````
+
+#### Using Optional with Primitive Streams:
+
+- The difference is that OptionalDouble is for a primitive and Optional<Double> is for the Double wrapper class. 
+- Working with the primitive optional class looks similar to working with the Optional class itself.
+
+
+- Practice:
+````java
+var stream = IntStream.rangeClosed(1,10);
+OptionalDouble optional = stream.average();
+optional.ifPresent(System.out::println); // 5.5
+System.out.println(optional.getAsDouble()); // 5.5
+System.out.println(optional.orElseGet(() ->Double.NaN)); // 5.5
+
+````
+- The only noticeable difference is that we called getAsDouble() rather than get().
+- This makes it clear that we are working with a primitive. 
+- Also, orElseGet() takes a DoubleSupplier instead of a Supplier.
+
+- Primitive Optional classes methods:
+
+![primitive_optionals.png](primitive_optionals.png)
+
+- Practice:
+
+````java
+LongStream longs = LongStream.of(5, 10);
+long sum = longs.sum();
+System.out.println(sum); // 15
+````
+
+### Summarizing Statistics:
+- Summary statistics include the following:
+ 
+  - **getCount():** Returns a long representing the number of values.
+  - **getAverage():** Returns a double representing the average. If the stream is empty, returns 0.
+  - **getSum():** Returns the sum as a double for DoubleSummaryStream and long for IntSummaryStream and LongSummaryStream.
+  - **getMin():** Returns the smallest number (minimum) as a double, int, or long, depending on the type of the stream. If the stream is empty, returns the largest numeric value based on the type.
+  - **getMax():** Returns the largest number (maximum) as a double, int, or long depending on the type of the stream. If the stream is empty, returns the smallest numeric value based on the type.
+  
+- Syntax:
+
+````java
+DoubleSummaryStatistics summaryStatistics(); //DoubleStream
+IntSummaryStatistics summaryStatistics(); //IntStream
+LongSummaryStatistics summaryStatistics(); //LongStream
+
+````
+
+- Practice:
+````java
+
+````
+
+
+## Advanced Stream Pipeline Concepts:
 
 
 ##### References:
