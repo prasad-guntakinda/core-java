@@ -553,9 +553,9 @@ Here are the three types of primitive streams:
     DoubleStream: Used for the primitive types double and float
 - Common Primitive Stream Methods:
 
-![primitive_stream_methods_1.png](primitive_stream_methods_1.png)
+![primitive_stream_methods_1.png](images/primitive_stream_methods_1.png)
 
-![primitive_stream_methods_2.png](primitive_stream_methods_2.png)
+![primitive_stream_methods_2.png](images/primitive_stream_methods_2.png)
 
 #### 10.3.1 Creating Primitive Streams:
 - Some of the methods for creating a primitive stream are equivalent to how we created the source for a regular Stream.
@@ -616,13 +616,13 @@ LongStream flatMapToLong(Function<? super T,? extends LongStream> mapper);
 ````
 
 
-![mapping_streams.png](mapping_streams.png)
+![mapping_streams.png](images/mapping_streams.png)
 
-![flatMappings.png](flatMappings.png)
+![flatMappings.png](images/flatMappings.png)
 
 - Funtion Types for mappings:
 
-![streams_mapping_functions.png](streams_mapping_functions.png)
+![streams_mapping_functions.png](images/streams_mapping_functions.png)
 
 - Primitive to Object Streams
 - 2 ways: mapToObj() and boxed()
@@ -664,7 +664,7 @@ System.out.println(optional.orElseGet(() ->Double.NaN)); // 5.5
 
 - Primitive Optional classes methods:
 
-![primitive_optionals.png](primitive_optionals.png)
+![primitive_optionals.png](images/primitive_optionals.png)
 
 - Practice:
 
