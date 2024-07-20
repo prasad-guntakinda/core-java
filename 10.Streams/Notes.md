@@ -700,7 +700,279 @@ LongSummaryStatistics summaryStatistics(); //LongStream
 
 ## Advanced Stream Pipeline Concepts:
 
+#### Linking Streams to the Underlying Data
 
+````java
+25: var cats = new ArrayList<String>();
+26: cats.add("Annie");
+27: cats.add("Ripley");
+28: var stream = cats.stream();
+29: cats.add("KC");
+30: System.out.println(stream.count()); //The correct answer is 3.
+````
+- Remember that streams are lazily evaluated.
+- This means that the stream isn’t created on line 28.
+- An object is created that knows where to look for the data when it is needed.
+
+#### Chaining Optionals:
+- A few of the intermediate operations for streams are available for Optional.
+
+- Practice:
+
+````java
+private static void threeDigit(Optional<Integer> optional) {
+optional.map(n -> "" + n) // part 1
+.filter(s -> s.length() == 3) // part 2
+.ifPresent(System.out::println); // part 3
+}
+````
+
+- flatMap removes the unnecessary layer. In other words, it flattens the result. 
+- Chaining calls to flatMap() is useful when you want to transform one Optional type to another.
+
+#### Using a Spliterator:
+
+- A Spliterator provides this level of control over processing. 
+- It starts with a Collection or a stream—that is your bag of food. 
+- You call trySplit() to take some food out of the bag. The rest of the food stays in the original Spliterator object.
+- The characteristics of a Spliterator depend on the underlying data source. A Collection data
+  source is a basic Spliterator. By contrast, when using a Stream data source, the Spliterator can
+  be parallel or even infinite. The Stream itself is executed lazily rather than when the Spliterator
+  is created.
+
+![spliterator_methods.png](spliterator_methods.png)
+
+- Practice:
+````java
+var stream = List.of("bird-", "bunny-", "cat-", "dog-", "fish-", "lamb-", "mouse-");
+Spliterator<String> originalBagOfFood = stream.spliterator();
+Spliterator<String> emmasBag = originalBagOfFood.trySplit();
+
+emmasBag.forEachRemaining(System.out::print); // bird-bunny-cat-
+
+Spliterator<String> jillsBag = originalBagOfFood.trySplit();
+
+jillsBag.tryAdvance(System.out::print); // dog-20:
+jillsBag.forEachRemaining(System.out::print); // fish-
+originalBagOfFood.forEachRemaining(System.out::print); // lamb-mouse-
+````
+
+- practice-2:
+````java
+var originalBag = Stream.iterate(1, n -> ++n).spliterator();
+Spliterator<Integer> newBag = originalBag.trySplit();
+newBag.tryAdvance(System.out::print); // 1
+newBag.tryAdvance(System.out::print); // 2
+newBag.tryAdvance(System.out::print); // 3
+````
+- You might have noticed that this is an infinite stream. No problem! The Spliterator
+  recognizes that the stream is infinite and doesn’t attempt to give you half. Instead, newBag
+  contains a large number of elements. We get the first three since we call tryAdvance()
+  three times. It would be a bad idea to call forEachRemaining() on an infinite stream!
+
+#### Collecting Results:
+- collect() terminal operation.
+  There are many predefined collectors, including those shown in Table 10.10. These collectors
+  are available via static methods on the Collectors class.
+
+- Note: There is one more collector called reducing(). You don’t need to know it
+  for the exam. It is a general reduction in case all of the previous collectors
+  don’t meet your needs.
+
+#### Using Basic Collectors
+
+![img_1.png](img_1.png)
+
+![img.png](img.png)
+
+![img_2.png](img_2.png)
+
+
+- Practice:
+````java
+var ohMy = Stream.of("lions", "tigers", "bears");
+String result = ohMy.collect(Collectors.joining(", "));
+System.out.println(result); // lions, tigers, bears
+````
+
+````java
+var ohMy = Stream.of("lions", "tigers", "bears");
+Double result = ohMy.collect(Collectors.averagingInt(String::length));
+System.out.println(result); // 5.333333333333333
+````
+
+````java
+var ohMy = Stream.of("lions", "tigers", "bears");
+TreeSet<String> result = ohMy.filter(s -> s.startsWith("t")).collect(Collectors.toCollection(TreeSet::new));
+System.out.println(result); // [tigers]
+````
+
+#### Collecting into Maps
+
+- Syntax:
+````java
+static <T,K,U> Collector<T,?,Map<K,U>> toMap(Function<? super T,? extends K> keyMapper, Function<? super T,? extends U> valueMapper);
+
+static <T,K,U> Collector<T,?,Map<K,U>> toMap(Function<? super T,? extends K> keyMapper, Function<? super T,? extends U> valueMapper, BinaryOperator<U> mergeFunction);
+
+static <T,K,U,M extends Map<K,U>> Collector<T,?,M> toMap(Function<? super T,? extends K> keyMapper, Function<? super T,? extends U> valueMapper, BinaryOperator<U> mergeFunction, Supplier<M> mapFactory);
+````
+- When creating a map, you need to specify two functions. The first function tells the collector how to create the key.
+- The second function tells the collector how to create the value
+- Returning the same value passed into a lambda is a common operation, so Java provides a method for it. You can rewrite **_s ->s_** as **_Function.identity()_**.
+
+- Practice:
+````java
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<String, Integer> map = ohMy.collect( Collectors.toMap(s -> s, String::length));
+System.out.println(map); // {lions=5, bears=5, tigers=6}
+````
+
+#### How to deal with duplicates while creating Maps?
+- Two of the animal names are the same length. We didn’t tell Java what
+  to do. Should the collector choose the first one it encounters? The last one it encounters?
+  Concatenate the two? Since the collector has no idea what to do, it “solves” the problem
+  by throwing an exception and making it our problem. How thoughtful. Let’s suppose that
+  our requirement is to create a comma-separated
+  String with the animal names.
+
+- Practice:
+
+````java
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Integer, String> map = ohMy.collect(Collectors.toMap(String::length, k ->k, (s1, s2) -> s1 + "," + s2));
+System.out.println(map); // {5=lions,bears, 6=tigers}
+System.out.println(map.getClass()); // class java.util.HashMap
+````
+
+````java
+TreeMap<Integer, String> map = ohMy.collect(Collectors.toMap(String::length, k ->k, (s1, s2) -> s1 + "," + s2, TreeMap::new));
+System.out.println(map); // // {5=lions,bears, 6=tigers}
+System.out.println(map.getClass()); // class java.util.TreeMap
+````
+
+#### Grouping, Partitioning, and Mapping:
+- **groupingBy:**
+- The groupingBy() method is a terminal
+  operation that creates a Map. The keys and return types are determined by the parameters
+  you pass. The values in the Map are a Collection for all the entries that map to that key.
+- Now suppose that we want to get groups of names by their length. We can do that by saying that we want to group by length.
+- The groupingBy() collector tells collect() that it should group all the elements of
+  the stream into a Map. The function determines the keys in the Map. Each value in the Map is
+  a List of all entries that match that key.
+- Note: Note that the function you call in groupingBy() cannot return null. It does not allow null keys.
+
+- Syntax:
+````java
+static <T,K> Collector<T,?,Map<K,List<T>>> groupingBy(Function<? super T,? extends K> classifier);
+
+static <T,K,D,A,M extends Map<K,D>> Collector<T,?,M> groupingBy(Function<? super T,? extends K> classifier, Supplier<M> mapFactory, Collector<? super T,A,D> downstream);
+
+static <T,K,A,D> Collector<T,?,Map<K,D>> groupingBy(Function<? super T,? extends K> classifier, Collector<? super T,A,D> downstream);
+````
+
+
+- Practice:
+````java
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Integer, List<String>> map = ohMy.collect(Collectors.groupingBy(String::length));
+System.out.println(map); // {5=[lions, bears], 6=[tigers]}
+````
+
+- Practice-2:
+````java
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Integer, Set<String>> map = ohMy.collect(Collectors.groupingBy( String::length, Collectors.toSet()));
+System.out.println(map); // {5=[lions, bears], 6=[tigers]}
+````
+
+- Practice-3:
+````java
+var ohMy = Stream.of("lions", "tigers", "bears");
+TreeMap<Integer, Set<String>> map = ohMy.collect(Collectors.groupingBy(String::length,TreeMap::new,Collectors.toSet()));
+System.out.println(map); // {5=[lions, bears], 6=[tigers]}
+````
+
+#### Partitioning:
+- The partitioningBy() method also returns a Map. This time, the keys are true and
+  false. The values are again a Collection of matches. If there are no matches for that
+  boolean, the Collection is empty.
+- Partitioning is a special case of grouping. With partitioning, there are only two possible groups: true and false.
+- Partitioning is like splitting a list into two parts.
+
+- Syntax:
+````java
+static <T> Collector<T,?,Map<Boolean,List<T>>> partitioningBy(Predicate<? super T> predicate);
+
+static <T,D,A> Collector<T,?,Map<Boolean,D>> partitioningBy(Predicate<? super T> predicate, Collector<? super T,A,D> downstream);
+````
+
+- Practice-1:
+````java
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Boolean, List<String>> map = ohMy.collect( Collectors.partitioningBy(s -> s.length() <= 5));
+System.out.println(map); // {false=[tigers], true=[lions, bears]}
+
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Boolean, List<String>> map = ohMy.collect( Collectors.partitioningBy(s -> s.length() <= 7));
+System.out.println(map); // {false=[], true=[lions, tigers, bears]}
+````
+
+- Practice-2:
+````java
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Boolean, Set<String>> map = ohMy.collect(Collectors.partitioningBy(s ->s.length() <= 7,Collectors.toSet()));
+System.out.println(map); // {false=[], true=[lions, tigers, bears]}
+````
+
+- Practice-3:
+````java
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Integer, Long> map = ohMy.collect( Collectors.groupingBy(String::length,Collectors.counting()));
+System.out.println(map); // {5=2, 6=1}
+````
+
+- Practice-4:
+````java
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Integer, Optional<Character>> map = ohMy.collect(Collectors.groupingBy(String::length,Collectors.mapping(s ->s.charAt(0),Collectors.minBy((a, b) ->a - b))));
+
+System.out.println(map); // {5=Optional[b], 6=Optional[t]}
+
+//shorter version:
+var ohMy = Stream.of("lions", "tigers", "bears");
+var map = ohMy.collect(groupingBy(String::length, mapping(s -> s.charAt(0), minBy((a, b) -> a -b))));
+System.out.println(map); // {5=Optional[b], 6=Optional[t]}
+````
+- This means that it is important to recognize the collector names because you might not have the Collectors class name to call your attention to it.
+
+
+##### Teeing Collectors:
+- Suppose you want to return two things. As we’ve learned, this is problematic with streams
+  because you only get one pass. The summary statistics are good when you want those operations.
+  Luckily, you can use teeing() to return multiple values of your own.
+  First, define the return type. We use a record here:
+
+````java
+record Separations(String spaceSeparated, String commaSeparated) {}
+````
+
+- Practice:
+````java
+var list = List.of("x", "y", "z");
+Separations result = list.stream()
+.collect(Collectors.teeing(
+Collectors.joining(" "),
+Collectors.joining(","),
+(s, c) -> new Separations(s, c)));
+System.out.println(result);
+//When executed, the code prints the following:
+
+//Separations[spaceSeparated=x y z, commaSeparated=x,y,z]
+````
+- There are three Collectors in this code. Two of them are for joining() and produce
+  the values we want to return. The third is teeing(), which combines the results into the
+  single object we want to return.
 ##### References:
 1. Optional: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Optional.html
 2. 
