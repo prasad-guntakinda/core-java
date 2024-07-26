@@ -138,7 +138,7 @@ public void counts(List<Integer> list) {
 
 #### Parameter Types Summary:
 
-![parameter_types.png](parameter_types.png)
+![parameter_types.png](images/parameter_types.png)
  
 #### 3.2 Local variables declared inside the lambda body
 - Lambda body can be a single expression, or it can have a block of code.
@@ -243,7 +243,7 @@ class Crow {
 
 #### Variable Scopes in Lambdas Summary:
 
-![variable_scopes_in_lambdas.png](variable_scopes_in_lambdas.png)
+![variable_scopes_in_lambdas.png](images/variable_scopes_in_lambdas.png)
 
 
 #### Lambdas Cheat Sheet:
@@ -427,7 +427,7 @@ System.out.println(myString.equals("Zebra")); // true
 
 #### Method References Summary:
 
-![method_references_summary.png](method_references_summary.png)
+![method_references_summary.png](images/method_references_summary.png)
 
 ---
 ## Functional Interfaces:
