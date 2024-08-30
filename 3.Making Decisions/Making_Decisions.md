@@ -263,10 +263,10 @@ public void printDayOfWeek(int day) {
 - The following is a list of all data types supported by switch statements:
 
     
-        - int and Integer
         - byte and Byte
         - short and Short
         - char and Character
+        - int and Integer
         - String
         - enum values
         - var (if the type resolves to one of the preceding types)

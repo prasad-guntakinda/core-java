@@ -460,6 +460,18 @@ System.out.println(first == third.intern()); //true
 - A String is implemented as an array with some methods that you might want to use when dealing with characters specifically.
 - A StringBuilder is implemented as an array where the array object is replaced with a new, bigger array object when it runs out of space to store all the characters.
 
+#### Exam Topics:
+
+````java
+repeat(int); //Returns a string whose value is the concatenation of this string repeated count times.
+int compareTo(String anotherString); //Compares two strings lexicographically.
+int compareToIgnoreCase(String str);//Compares two strings lexicographically, ignoring case differences.
+transform(Function<? super String,? extends R> f); //This method was added in Java 12. It allows the application of a function to this string. The function should expect a single String argument and produce an R result. Any exception thrown by f.apply() will be propagated to the caller.
+public String intern(); //This is an important method of String class from exam perspective. It returns a canonical representation for the string object.
+
+````
+
+
 
 
 

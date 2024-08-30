@@ -179,7 +179,7 @@ date = date.plusMinutes(1); // DOES NOT COMPILE: minutes is part of Time not Dat
 
 - Methods Summary:
 
-![date_time_methods_summary.png](images/date_time_methods_summary.png)
+![date_time_methods_summary.png](date_time_methods_summary.png)
 
 #### Working with Periods:
 
@@ -232,7 +232,7 @@ var everyYearAndAWeek = Period.of(1, 0, 7); // every year and 7 days
 - The of() method takes only years, months, and days. The ability to use another factory method to pass weeks is merely a convenience.
 - As you might imagine, the actual period is stored in terms of years, months, and days.
 
-![period_format.png](images/period_format.png)
+![period_format.png](period_format.png)
 
 - As you can see, the P always starts out the String to show it is a period measure. 
 - Then come the number of years, number of months, and number of days. If any of these are zero, they are omitted.
@@ -338,7 +338,7 @@ System.out.println(date.plus(days)); // Unsupported unit: Seconds
 - Since we are working with a LocalDate, we are required to use Period.
 - Duration has time units in it, even if we don’t see them, and they are meant only for objects with time.
 
-![period_vs_duration.png](images/period_vs_duration.png)
+![period_vs_duration.png](period_vs_duration.png)
 
 
 ### Working with Instants:
@@ -383,7 +383,7 @@ System.out.println(duration.toMillis()); // Returns number milliseconds
   time falls back, and we experience the hour from 1:00 a.m. to 1:59 a.m. twice. Children
   learn this as “Spring forward in the spring, and fall back in the fall.”
 
-![day_light_saving.png](images/day_light_saving.png)
+![day_light_saving.png](day_light_saving.png)
 
 - For example, on March 13, 2022, we move our clocks forward an hour and jump from
   2:00 a.m. to 3:00 a.m. This means that there is no 2:30 a.m. that day. If we wanted to know

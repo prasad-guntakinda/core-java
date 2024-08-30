@@ -85,7 +85,7 @@ important words or methods within a code sample.
 In addition to these text conventions, which can apply to individual words or entire paragraphs,
 a few conventions highlight segments of text.
 
-![img.png](book_tips_notes.png)
+![img.png](images/book_tips_notes.png)
 
 ## Online References
 - www.selikoff.net/ocp17
