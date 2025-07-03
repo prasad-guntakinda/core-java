@@ -1,2 +1,5 @@
 /.idea/
 /.obsidian
+out/
+bin/
+practices/bin/streams/StreamsIntro.class

@@ -1,5 +1,5 @@
 import java.util.function.*;
-public class LambdaApp {
+class LambdaApp {
     public static void main(String[] args) {
         //()->{};
         BooleanSupplier bs = ()-> true;
@@ -15,7 +15,7 @@ public class LambdaApp {
     }
 }
 
-@FunctionalInterface
+//@FunctionalInterface
 interface FlyCheck{
     String toString();
 }
