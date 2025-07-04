@@ -34,6 +34,10 @@ public class StreamsIntro {
                 
         mBuilder.build().forEach(System.out::print);
         System.out.println("------------------");
+
+        Stream<String> s1 = Stream.of("a", "b", "c"); // stream of 3 elements
+Stream<int[]> s2 = Stream.of(new int[]{1, 2, 3}); // stream of 1 element (the array)
+s2.forEach(System.out::println); // prints the array reference
     }
 
     private static void infiniteStreams() {
@@ -53,4 +57,5 @@ public class StreamsIntro {
             .forEach(System.out::print);
         System.out.println();
     }
+
 }

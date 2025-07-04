@@ -866,7 +866,7 @@ System.out.println(map); // // {5=lions,bears, 6=tigers}
 System.out.println(map.getClass()); // class java.util.TreeMap
 ````
 
-#### Grouping, Partitioning, and Mapping:
+## Grouping, Partitioning, and Mapping:
 - **groupingBy:**
 - The groupingBy() method is a terminal
   operation that creates a Map. The keys and return types are determined by the parameters
@@ -885,7 +885,52 @@ static <T,K,D,A,M extends Map<K,D>> Collector<T,?,M> groupingBy(Function<? super
 
 static <T,K,A,D> Collector<T,?,Map<K,D>> groupingBy(Function<? super T,? extends K> classifier, Collector<? super T,A,D> downstream);
 ````
+- Syntax Explanation:
+  
+````Text
+Classifier: Returns a Collector implementing a cascaded "group by" operation on input elements of type T, grouping elements according to a classification function, 
 
+downstream collector: Performing a reduction operation on the values associated with a given key using the specified downstream Collector.
+
+mapFactory: The Map produced by the Collector is created with the supplied factory function. this is nothing but how to create a map
+
+Summary:
+
+The classification function maps elements to some key type K. The downstream collector operates on elements of type T and produces a result of type D. The resulting collector produces a Map<K, D>.
+
+For example, 
+        //group employees by department and dispaly unique employee names per department 
+        var emps = createEmployees();
+        emps.stream().collect(Collectors.groupingBy(emp-> emp.department(), Collectors.mapping(emp-> emp.name(), Collectors.toSet())))
+        .forEach((dept, name) -> {
+            System.out.println("Department: " + dept + " Employee Name: " + name);
+        });
+
+         System.out.println("--------------------------------------------------");
+         ////group employees by department and dispaly employee names per department. Result Map is sorted by department names because of Tree Map
+        emps.stream().collect(Collectors.groupingBy(emp-> emp.department(), TreeMap::new, Collectors.mapping(emp-> emp.name(), Collectors.toList())))
+        .forEach((dept, name) -> {
+            System.out.println("Department: " + dept + " Employee Names: " + name);
+        });
+         System.out.println("--------------------------------------------------");
+
+    }
+
+    private static List<Employee> createEmployees() {
+        return List.of(
+            new Employee("Zenny", 15, 30000, "HR"),
+            new Employee("Alice", 1, 50000, "HR"),
+            new Employee("Bob", 2, 60000, "IT"),
+            new Employee("Charlie", 3, 70000, "IT"),
+            new Employee("Bob", 23, 20000, "IT"),
+            new Employee("David", 4, 80000, "Finance")
+        );
+    }
+}
+
+record Employee(String name, int id, double salary, String department) {
+}
+````
 
 - Practice:
 ````java
@@ -908,7 +953,7 @@ TreeMap<Integer, Set<String>> map = ohMy.collect(Collectors.groupingBy(String::l
 System.out.println(map); // {5=[lions, bears], 6=[tigers]}
 ````
 
-#### Partitioning:
+### Partitioning:
 - The partitioningBy() method also returns a Map. This time, the keys are true and
   false. The values are again a Collection of matches. If there are no matches for that
   boolean, the Collection is empty.
@@ -920,6 +965,27 @@ System.out.println(map); // {5=[lions, bears], 6=[tigers]}
 static <T> Collector<T,?,Map<Boolean,List<T>>> partitioningBy(Predicate<? super T> predicate);
 
 static <T,D,A> Collector<T,?,Map<Boolean,D>> partitioningBy(Predicate<? super T> predicate, Collector<? super T,A,D> downstream);
+````
+- Syntax Explanation:
+````Text
+Returns a Collector which partitions the input elements according to a Predicate, reduces the values in each partition according to another Collector, and organizes them into a Map<Boolean, D> whose values are the result of the downstream reduction.
+
+var employees = createEmployees();
+        // Example of partitioning employees based on salary
+        employees.stream()
+            .collect(Collectors.partitioningBy(emp -> emp.salary() > 50000))
+            .forEach((isHighSalary, empList) -> {
+                System.out.println("High Salary: " + isHighSalary + " Employees: " + empList);
+            });
+
+        System.out.println("--------------------------------------------------");
+        // Example of partitioning employees based on salary and collecting names
+        employees.stream()
+        .collect(Collectors.partitioningBy(emp -> emp.salary() > 50000, 
+            Collectors.mapping(emp -> emp.name(), Collectors.toList())))
+            .forEach((isHighSalary, empNames) -> {
+                System.out.println("High Salary: " + isHighSalary + " Employee Names: " + empNames);
+            });
 ````
 
 - Practice-1:
