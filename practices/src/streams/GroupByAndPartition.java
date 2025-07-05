@@ -1,5 +1,6 @@
 package streams;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -65,6 +66,8 @@ public class GroupByAndPartition {
             System.out.println("Department: " + dept + " Employee Count: " + count);
         });
          System.out.println("--------------------------------------------------");
+
+         HashMap
     }
 
     private static List<Employee> createEmployees() {
