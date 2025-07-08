@@ -685,7 +685,6 @@ CyclicBarrier is useful for scenarios where threads must wait for each other at 
 - <strong>Concurrent collection:</strong> Designed for concurrency (e.g., <code>ConcurrentHashMap</code>), allows better scalability and performance.
 
 </details>
-
 ---
 <details>
 <summary>What is the difference between Thread.sleep() and Object.wait()?</summary>
@@ -984,4 +983,109 @@ Semaphore is useful for controlling access to limited resources, such as connect
 - Use <strong>Semaphore</strong> when you want to allow a fixed number of threads to access a resource concurrently.
 
 </details>
+
+---
+
+<details>
+<summary>What are the features added after Java 8 to work on threads?</summary>
+
+Java has introduced several features after Java 8 to enhance thread management, parallelism, and concurrency. Here are the key additions:
+
+### 1. **CompletableFuture (Java 8 and Enhanced in Java 9)**
+- A powerful API for asynchronous programming.
+- Supports chaining and combining multiple asynchronous tasks.
+- Provides methods like `thenApply()`, `thenAccept()`, `thenCombine()`, and `exceptionally()`.
+- Java 9 added `CompletableFuture.delayedExecutor()` and factory methods like `supplyAsync()` with custom executors.
+
+**Example:**
+```java
+CompletableFuture.supplyAsync(() -> {
+    return "Hello";
+}).thenApply(result -> result + " World")
+  .thenAccept(System.out::println);
+// Output: Hello World
+```
+
+---
+
+### 2. **Fork/Join Enhancements (Java 9)**
+- Improved `ForkJoinPool` with better performance and scalability.
+- Added methods like `defaultForkJoinWorkerThreadFactory` and `commonPool()` improvements.
+
+---
+
+### 3. **Reactive Streams (Java 9)**
+- Introduced `java.util.concurrent.Flow` API to support reactive programming.
+- Provides interfaces like `Publisher`, `Subscriber`, `Subscription`, and `Processor`.
+- Enables building non-blocking, asynchronous data pipelines.
+
+**Example:**
+```java
+Flow.Publisher<String> publisher = subscriber -> {
+    subscriber.onNext("Hello");
+    subscriber.onComplete();
+};
+```
+
+---
+
+### 4. **Thread-Local Handlers (Java 10)**
+- Enhanced `ThreadLocal` with factory methods like `ThreadLocal.withInitial()`.
+- Simplifies initialization of thread-local variables.
+
+---
+
+### 5. **VarHandle (Java 9)**
+- Introduced `java.lang.invoke.VarHandle` as a replacement for `sun.misc.Unsafe`.
+- Provides a safe and flexible way to perform atomic operations on variables.
+
+**Example:**
+```java
+VarHandle handle = MethodHandles.lookup().findVarHandle(MyClass.class, "field", int.class);
+handle.set(myObject, 42);
+```
+
+---
+
+### 6. **Parallel Streams Enhancements (Java 9)**
+- Improved performance and added methods like `takeWhile()` and `dropWhile()` for better control over stream processing.
+
+---
+
+### 7. **Scoped Variables (Java 19 - Preview)**
+- Introduced `ScopedValue` (preview feature) to manage thread-local-like variables with better control and safety.
+- Useful for passing contextual data across threads.
+
+**Example:**
+```java
+ScopedValue<String> user = ScopedValue.newInstance();
+ScopedValue.where(user, "Alice").run(() -> {
+    System.out.println(user.get());
+});
+```
+
+---
+
+### 8. **Virtual Threads (Java 19 - Preview, Java 21 - Stable)**
+- Introduced lightweight threads (Project Loom) to handle millions of concurrent tasks.
+- Virtual threads are managed by the JVM, not the OS, making them more efficient.
+
+**Example:**
+```java
+try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+    executor.submit(() -> System.out.println("Running in a virtual thread"));
+}
+```
+
+---
+
+### Summary
+- **Java 8:** CompletableFuture, parallel streams.
+- **Java 9:** Reactive Streams, Fork/Join enhancements, VarHandle.
+- **Java 10+:** Thread-local improvements, Scoped variables, Virtual threads.
+
+These features make Java a robust platform for modern, scalable, and efficient concurrent programming.
+
+</details>
+<hr>
 
